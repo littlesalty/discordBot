@@ -1,6 +1,7 @@
 import { Channel, Client, Guild, Intents, Message, TextBasedChannels } from "discord.js"
 import { env } from "./config"
 import { TwitchService } from "./twitch"
+import { getStartOfToday, setIntervalAndExecute } from "./utils/common"
 
 interface IDiscordService {
     discordClient: Client
@@ -8,6 +9,7 @@ interface IDiscordService {
     defaultChannelId?: string
 }
 
+const CLIPS_FETCH_INTERVAL_MS = 60_000
 
 export class DiscordService implements IDiscordService {
     discordClient: Client
@@ -33,21 +35,8 @@ export class DiscordService implements IDiscordService {
                 if (g.id === env.DISCORD_DEFAULT_GUILD_ID) { this.mainGuild = g }
                 return g
             })
-            console.log("time!", this.guilds)
-            setInterval(() => {
 
-                if (this.mainGuild) {
-                    const clipsChannel = this.mainGuild.channels.cache.find(c => {
-                        return c.name === "clips"
-                    })
-                    console.assert(clipsChannel, "didn't found a clip channel!")
-                    if (clipsChannel?.isText()) {
-                        this.writeMessageToChannel(clipsChannel, "hello")
-                    }
-
-                }
-
-            }, 15_000)
+            this.pollForTwitchClipsAndUpdateChannel()
         })
 
         this.discordClient.on('messageCreate', message => {
@@ -75,17 +64,50 @@ export class DiscordService implements IDiscordService {
      */
 
     writeMessageToChannel(channel: TextBasedChannels, message: string) {
+        console.log("sending message to channel ", message)
         channel.send(message)
     }
-    writeMissingTwitchClips(channel: TextBasedChannels, ) {
-        const lastMessage = channel.lastMessage
-        if (lastMessage) {
-            console.log("last message", channel.lastMessage)
-        }
-    }
 
-    pollTwitchClipsAndUpdateChannel(){
-        
+    pollForTwitchClipsAndUpdateChannel() {
+        setIntervalAndExecute(async () => {
+            const clipsChannel = this.mainGuild?.channels.cache.find(c => {
+                // the text channel must be named "clips"
+                return c.name === "clips"
+            })
+
+            console.assert(clipsChannel, "didn't found a clip channel!")
+
+            if (clipsChannel?.isText()) {
+                const latestMessages = await clipsChannel.messages.fetch({ limit: 1 })
+                const lastMessage = latestMessages.first()
+                const latestMessageDate = lastMessage?.createdAt
+                const startOfDay = getStartOfToday()
+                // if there is at least one message in the channel, fetch clips only from today
+                const startDate = latestMessageDate ? startOfDay : undefined
+                const latestClips = await this.twitchService.getTwitchClips({ startDate: startDate?.toISOString() })
+                console.log("fetching new Twitch Clips")
+
+                if (latestClips.length == 0) return
+
+                if (lastMessage) {
+                    latestClips.filter(clip => {
+                        return (lastMessage.createdAt < clip.creationDate)
+                    }).forEach(clip => {
+                        const message = `NEW CLIP! ${clip.title} - ${clip.url}`
+                        this.writeMessageToChannel(clipsChannel, message)
+
+                    })
+                } else {
+                    // There is no message in the channel, start populating the channel with the 20 most popular clips of twitch
+
+                    latestClips.forEach(clip => {
+                        const message = `NEW CLIP! ${clip.title} - ${clip.url}`
+                        this.writeMessageToChannel(clipsChannel, message)
+
+                    })
+                }
+            }
+        }, CLIPS_FETCH_INTERVAL_MS)
     }
 }
 
@@ -99,7 +121,6 @@ function replyToMessage(messageReceived: Message<boolean>) {
     const replyText = botOptionsAndReplies.get(content)
     if (replyText) {
         messageReceived.channel.send(replyText)
-        console.log("author: ", messageReceived.author)
     }
 
 }

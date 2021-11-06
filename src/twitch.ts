@@ -28,6 +28,8 @@ export class TwitchService {
      * @returns Promise of TwitchToken Object
      */
     createOrUpdateToken = async (): Promise<void> => {
+        console.log("creating or updating twitch api token")
+
         const url = "https://id.twitch.tv/oauth2/token"
         const body = {
             client_id: env?.TWITCH_CLIENT_ID,
@@ -37,12 +39,13 @@ export class TwitchService {
 
         const request = await daxios.post<TwitchToken>(url, body, { headers: { "Content-Type": " application/json" } })
 
-        console.log("getToken request", request.data)
         this.accessToken = request.data.access_token
     }
 
     createOrUpdateApiClient = async () => {
         await this.createOrUpdateToken()
+        console.log("creating or updating twitch api client")
+
         const authProvider = new StaticAuthProvider(this.clientId, this.accessToken);
         this.apiClient = new ApiClient({ authProvider });
     }
@@ -52,14 +55,19 @@ export class TwitchService {
      */
     getTwitchClips = async (filters?: TwitchClipFilters): Promise<Array<HelixClip>> => {
         const broadcasterId = env?.BROADCASTER_ID ?? ''
-        const result = await this.apiClient?.helix.clips.getClipsForBroadcaster(broadcasterId, filters)
-        result?.data.forEach(clip => {
-            console.log(clip.id)
-            console.log(clip.title)
-            console.log(clip.url)
-            console.log(clip.creationDate)
-        })
-        return result?.data ?? []
+        let data: Array<HelixClip> | undefined = []
+        try {
+            const result = await this.apiClient?.helix.clips.getClipsForBroadcaster(broadcasterId, filters)
+            data = result?.data
 
+        }
+        catch (err) {
+            console.error("error whilte getting twitch clips", err)
+
+            this.createOrUpdateApiClient()
+            const result = await this.apiClient?.helix.clips.getClipsForBroadcaster(broadcasterId, filters)
+            data = result?.data
+        }
+        return data ?? []
     }
 }
