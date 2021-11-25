@@ -20,7 +20,7 @@ export class TwitchService {
     clientId: string
     apiClient?: ApiClient
     constructor() {
-        this.clientId = env?.TWITCH_CLIENT_ID ?? '';
+        this.clientId = env.TWITCH_CLIENT_ID
         this.createOrUpdateApiClient()
     }
     /**
@@ -32,8 +32,8 @@ export class TwitchService {
 
         const url = "https://id.twitch.tv/oauth2/token"
         const body = {
-            client_id: env?.TWITCH_CLIENT_ID,
-            client_secret: env?.TWITCH_API_SECRET,
+            client_id: env.TWITCH_CLIENT_ID,
+            client_secret: env.TWITCH_API_SECRET,
             grant_type: 'client_credentials'
         }
 
@@ -54,7 +54,7 @@ export class TwitchService {
      * @param filters can contain startDate (ISOString), endDate(ISOString) and limit.
      */
     getTwitchClips = async (filters?: TwitchClipFilters): Promise<Array<HelixClip>> => {
-        const broadcasterId = env?.BROADCASTER_ID ?? ''
+        const broadcasterId = env.BROADCASTER_ID
         let data: Array<HelixClip> | undefined = []
         try {
             const result = await this.apiClient?.helix.clips.getClipsForBroadcaster(broadcasterId, filters)

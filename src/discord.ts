@@ -54,7 +54,7 @@ export class DiscordService implements IDiscordService {
      * Makes the bot go online
      */
     async startDiscordBot() {
-        const discordKey = env?.DISCORD_BOT_KEY
+        const discordKey = env.DISCORD_BOT_KEY
         this.discordClient.login(discordKey)
     }
 
