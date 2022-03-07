@@ -1,5 +1,6 @@
 import { Channel, Client, Guild, Intents, Message, TextBasedChannels } from "discord.js"
 import { env } from "./config"
+import { doIfCanReply } from "./no-spam"
 import { TwitchService } from "./twitch"
 import { getStartOfToday, setIntervalAndExecute } from "./utils/common"
 
@@ -118,11 +119,11 @@ function replyToMessage(messageReceived: Message<boolean>) {
         messageReceived.channel.send(botFormattedOptionsReply)
         return
     }
+
     const replyText = botOptionsAndReplies.get(content)
     if (replyText) {
-        messageReceived.channel.send(replyText)
+        doIfCanReply(messageReceived.author, () => messageReceived.channel.send(replyText))
     }
-
 }
 
 function getBotOptionsAndReplies(): string {
