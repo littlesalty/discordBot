@@ -147,5 +147,7 @@ const botOptionsAndReplies = new Map([
     ['josep no es un troll', 'NICE MEME'],
     ['toni vienes valorant?', 'voy a estudiar'],
     ['que te parece toni?', 'INJUGABLE'],
-    ['quiero una pizza', 'marchando una diabla sin guindilla']
+    ['quiero una pizza', 'marchando una diabla sin guindilla'],
+    ['report', 'Diego estás reportado 📝'],
+    ['rocket?', '🏎️🚀⚽']
 ])
