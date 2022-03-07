@@ -12,7 +12,7 @@ import { HelixClip } from "twitch/lib"
 import { env } from "./config"
 import { TwitchService } from "./twitch"
 import { getStartOfToday, setIntervalAndExecute } from "./utils/common"
-
+import { doIfCanReply } from "./utils/no-spam"
 interface IDiscordService {
     discordClient: Client
     twitchService: TwitchService
@@ -182,7 +182,7 @@ function replyToMessage(messageReceived: Message<boolean>) {
     }
     const replyText = botOptionsAndReplies.get(content)
     if (replyText) {
-        messageReceived.channel.send(replyText)
+        doIfCanReply(messageReceived.author, () => messageReceived.channel.send(replyText))
     }
 }
 
