@@ -182,8 +182,14 @@ function replyToMessage(messageReceived: Message<boolean>) {
   }
   const replyText = botOptionsAndReplies.get(content)
   if (replyText) {
-    doIfCanReply(messageReceived.author, () =>
-      messageReceived.channel.send(replyText)
+    doIfCanReply(
+      messageReceived.author,
+      () => messageReceived.channel.send(replyText),
+      () => messageReceived.channel.send("deja de spamear put@"),
+      () =>
+        messageReceived.channel.send(
+          "de tanto tocar los 🥚🥚 has encontrado el easter 🥚"
+        )
     )
   }
 }
