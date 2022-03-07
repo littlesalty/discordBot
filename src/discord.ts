@@ -265,4 +265,8 @@ const botOptionsAndReplies = new Map([
     ["toni vienes valorant?", "voy a estudiar"],
     ["que te parece toni?", "INJUGABLE"],
     ["quiero una pizza", "marchando una diabla sin guindilla"],
+    ['report', 'Diego estás reportado 📝'],
+    ['rocket?', '🏎️🚀⚽'],
+    ["vamos tft?", "voy yordles"],
+    ["me voy a dormir", "a tu puta casa"]
 ])
