@@ -11,6 +11,7 @@ import {
 import { HelixClip } from "twitch/lib"
 import { env } from "./config"
 import { TwitchService } from "./twitch"
+import { botOptionsAndReplies } from "./utils/bot-options"
 import { getStartOfToday, setIntervalAndExecute } from "./utils/common"
 import { doIfCanReply } from "./utils/no-spam"
 interface IDiscordService {
@@ -269,19 +270,3 @@ function getBotOptionsAndReplies(): string {
 
 	return formattedReply
 }
-
-const botOptionsAndReplies = new Map([
-	["hola", "hola chavales"],
-	["sergi es noob", "efectivament"],
-	["vamos valorant", "venga va"],
-	["quiero un chupito", "preparando una mulata cachonda!"],
-	["quiero una absenta", "Xavi... no tuviste suficiente?"],
-	["josep no es un troll", "NICE MEME"],
-	["toni vienes valorant?", "voy a estudiar"],
-	["que te parece toni?", "INJUGABLE"],
-	["quiero una pizza", "marchando una diabla sin guindilla"],
-	["report", "Diego estás reportado 📝"],
-	["rocket?", "🏎️🚀⚽"],
-	["vamos tft?", "voy yordles"],
-	["me voy a dormir", "a tu puta casa"],
-])
