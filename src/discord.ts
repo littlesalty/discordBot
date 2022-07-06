@@ -5,12 +5,13 @@ import {
 	Guild,
 	Intents,
 	Message,
-	TextBasedChannels,
+	TextBasedChannel,
 	ThreadChannel,
 } from "discord.js"
 import { HelixClip } from "twitch/lib"
 import { env } from "./config"
 import { TwitchService } from "./twitch"
+import { playAudio } from "./audio-player/audio-player"
 import { botOptionsAndReplies } from "./utils/bot-options"
 import { getStartOfToday, setIntervalAndExecute } from "./utils/common"
 import { doIfCanReply } from "./utils/no-spam"
@@ -38,6 +39,7 @@ export class DiscordService implements IDiscordService {
 				Intents.FLAGS.DIRECT_MESSAGES,
 				Intents.FLAGS.GUILDS,
 				Intents.FLAGS.GUILD_MESSAGES,
+				Intents.FLAGS.GUILD_VOICE_STATES,
 			],
 		})
 		this.twitchService = twitchService
@@ -86,7 +88,7 @@ export class DiscordService implements IDiscordService {
 	 * @param channel channel to write the message to
 	 * @param message message to write
 	 */
-	writeMessageToChannel(channel: TextBasedChannels, message: string) {
+	writeMessageToChannel(channel: TextBasedChannel, message: string) {
 		channel.send(message)
 	}
 	/**
@@ -126,12 +128,14 @@ export class DiscordService implements IDiscordService {
 					)
 					console.log("fetching new Twitch Clips")
 					latestClips.forEach((clip) => {
-						this.maybeAddOrEditClipInChat(
-							clip,
-							latestMessages,
-							lastMessage,
-							clipsChannel
-						)
+						if (clipsChannel.isThread()) {
+							this.maybeAddOrEditClipInChat(
+								clip,
+								latestMessages,
+								lastMessage,
+								clipsChannel
+							)
+						}
 					})
 				} else {
 					// There is no message in the channel, start populating the channel with the 20 most popular clips of twitch
@@ -181,6 +185,15 @@ export class DiscordService implements IDiscordService {
 }
 function replyToMessage(messageReceived: Message<boolean>) {
 	const content = messageReceived.content.toLocaleLowerCase()
+	if (content === "debug") {
+		console.log("debug!")
+		messageReceived.reply("si, estás en modo debug")
+		return
+	}
+	if (content === "!speaktome") {
+		playAudio(messageReceived)
+		return
+	}
 	if (content === "!options") {
 		const botFormattedOptionsReply = getBotOptionsAndReplies()
 		messageReceived.channel.send(botFormattedOptionsReply)
