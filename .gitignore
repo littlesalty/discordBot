@@ -2,3 +2,4 @@
 /node_modules
 secrets.env
 /dist
+/src/audio-player/audios

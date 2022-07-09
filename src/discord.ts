@@ -11,7 +11,7 @@ import {
 import { HelixClip } from "twitch/lib"
 import { env } from "./config"
 import { TwitchService } from "./twitch"
-import { playAudio } from "./audio-player/audio-player"
+import { audioListMessage, playAudio } from "./audio-player/audio-player"
 import { botOptionsAndReplies } from "./utils/bot-options"
 import { getStartOfToday, setIntervalAndExecute } from "./utils/common"
 import { doIfCanReply } from "./utils/no-spam"
@@ -185,12 +185,15 @@ export class DiscordService implements IDiscordService {
 }
 function replyToMessage(messageReceived: Message<boolean>) {
 	const content = messageReceived.content.toLocaleLowerCase()
-	if (content === "debug") {
-		console.log("debug!")
-		messageReceived.reply("si, estás en modo debug")
+	if (content.startsWith("!audiolist") || content == "!al") {
+		messageReceived.reply(audioListMessage())
 		return
 	}
-	if (content === "!speaktome") {
+	if (
+		content.startsWith("!speaktome") ||
+		content.startsWith("!sp ") ||
+		content == "!sp"
+	) {
 		playAudio(messageReceived)
 		return
 	}
