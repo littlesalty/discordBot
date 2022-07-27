@@ -1,4 +1,5 @@
 import {
+	AudioPlayerStatus,
 	createAudioPlayer,
 	createAudioResource,
 	joinVoiceChannel,
@@ -39,9 +40,22 @@ const audioClipMapper = [
 	"el_microbio_asesino",
 	"tengo_2_tengo_3_tengo_4_tengo_5",
 	"baitedos_chavales_yo_me_voy_por_aqui", // maybe borrar
+	"y_mi_guiri_que_hace",
+	"me_has_robado_la_shorty",
+	"yo_no_he_robado_nada",
+	"risa_de_josep",
+	"risa_de_josep_2",
+	"no_orgasmico_de_diego",
+	"algunos_dirian_que_he_troleado",
+	"ay_no_tienes_smite",
+	"hostia_sergi_como_que_sergi",
+	"me_puedo_ir_afk_por_favor",
+	"si_si_vete_afk",
+	"aixo_es_surrealista",
 ]
 const NUMBER_OF_AUDIO_FILES = audioClipMapper.length
 export const audioPlayer = createAudioPlayer()
+export let audioPlayerStatus: AudioPlayerStatus = AudioPlayerStatus.Idle
 export const playAudio = (message: Message<boolean>) => {
 	const channel = message.member?.voice?.channel
 	let audioToPlay = 1
@@ -60,7 +74,7 @@ export const playAudio = (message: Message<boolean>) => {
 		return
 	}
 
-	if (channel.isVoice()) {
+	if (channel.isVoiceBased()) {
 		const connection = joinVoiceChannel({
 			channelId: channel.id,
 			guildId: channel.guild.id,
@@ -73,19 +87,27 @@ export const playAudio = (message: Message<boolean>) => {
 		// subscription could be undefined if the connection is destroyed!
 		if (subscription) {
 			const resourceDir = mapAudioIdToPath(audioToPlay)
-			const resource = createAudioResource(
-				join(__dirname, `audios/${resourceDir}.mp3`)
-			)
+			const resource = createAudioResource(`audios/${resourceDir}.mp3`)
 			audioPlayer.play(resource)
-			// Unsubscribe after 5 seconds (stop playing audio on the voice connection)
-			// setTimeout(() => {
-			// 	audioPlayer.i
-			// 	subscription.unsubscribe()
-			// }, 10_000)
+			audioPlayer.on("stateChange", (_oldState, newState) => {
+				audioPlayerStatus = newState.status
+				if (isPlayingStatus(audioPlayerStatus))
+					setTimeout(() => {
+						if (!isPlayingStatus(audioPlayerStatus)) {
+							connection.disconnect()
+						}
+					}, 300_000)
+			})
 		}
 	}
 }
 
+const isPlayingStatus = (audioPlayerStatus: AudioPlayerStatus) => {
+	return (
+		audioPlayerStatus == AudioPlayerStatus.Buffering ||
+		audioPlayerStatus == AudioPlayerStatus.Playing
+	)
+}
 export const audioListMessage = () => {
 	const formattedList = audioClipMapper
 		.map(
