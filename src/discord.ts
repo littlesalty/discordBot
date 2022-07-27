@@ -3,10 +3,12 @@ import {
 	Client,
 	Collection,
 	Guild,
-	Intents,
+	GatewayIntentBits,
 	Message,
 	TextBasedChannel,
 	ThreadChannel,
+	IntentsBitField,
+	BaseChannel,
 } from "discord.js"
 import { HelixClip } from "twitch/lib"
 import { env } from "./config"
@@ -25,7 +27,12 @@ const CLIPS_FETCH_INTERVAL_MS = 60_000
 const TITLE_LINE_START = "title:"
 const ID_LINE_START = "clip_id:"
 const DATE_LINE_START = "created_at:"
-
+const intents = new IntentsBitField([
+	IntentsBitField.Flags.DirectMessages,
+	IntentsBitField.Flags.Guilds,
+	IntentsBitField.Flags.GuildMessages,
+	IntentsBitField.Flags.GuildVoiceStates,
+])
 export class DiscordService implements IDiscordService {
 	discordClient: Client
 	twitchService: TwitchService
@@ -35,12 +42,7 @@ export class DiscordService implements IDiscordService {
 
 	constructor(twitchService: TwitchService, defaultChannelId?: string) {
 		this.discordClient = new Client({
-			intents: [
-				Intents.FLAGS.DIRECT_MESSAGES,
-				Intents.FLAGS.GUILDS,
-				Intents.FLAGS.GUILD_MESSAGES,
-				Intents.FLAGS.GUILD_VOICE_STATES,
-			],
+			intents,
 		})
 		this.twitchService = twitchService
 		this.defaultChannelId = defaultChannelId
@@ -88,8 +90,10 @@ export class DiscordService implements IDiscordService {
 	 * @param channel channel to write the message to
 	 * @param message message to write
 	 */
-	writeMessageToChannel(channel: TextBasedChannel, message: string) {
-		channel.send(message)
+	writeMessageToChannel(channel: BaseChannel, message: string) {
+		if (channel.isTextBased()) {
+			channel.send(message)
+		}
 	}
 	/**
 	 * Edits a message
@@ -112,7 +116,7 @@ export class DiscordService implements IDiscordService {
 
 			console.assert(clipsChannel, "didn't found a clip channel!")
 
-			if (clipsChannel?.isText()) {
+			if (clipsChannel?.isTextBased()) {
 				const latestMessages = await clipsChannel.messages.fetch({
 					limit: 10,
 				})

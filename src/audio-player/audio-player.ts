@@ -5,7 +5,8 @@ import {
 } from "@discordjs/voice"
 import { Message } from "discord.js"
 import { join } from "path"
-
+import { getListOfFiles } from "../utils/common"
+const audioClipMapperV2 = getListOfFiles(join(__dirname, "audios"))
 const audioClipMapper = [
 	"joseeep_version_corta",
 	"josep_ezreal_no_se_juega_asi",
@@ -40,7 +41,7 @@ const audioClipMapper = [
 	"tengo_2_tengo_3_tengo_4_tengo_5",
 	"baitedos_chavales_yo_me_voy_por_aqui", // maybe borrar
 ]
-const NUMBER_OF_AUDIO_FILES = audioClipMapper.length
+const NUMBER_OF_AUDIO_FILES = audioClipMapperV2.length
 export const audioPlayer = createAudioPlayer()
 export const playAudio = (message: Message<boolean>) => {
 	const channel = message.member?.voice?.channel
@@ -60,7 +61,7 @@ export const playAudio = (message: Message<boolean>) => {
 		return
 	}
 
-	if (channel.isVoice()) {
+	if (channel.isVoiceBased()) {
 		const connection = joinVoiceChannel({
 			channelId: channel.id,
 			guildId: channel.guild.id,
@@ -87,7 +88,7 @@ export const playAudio = (message: Message<boolean>) => {
 }
 
 export const audioListMessage = () => {
-	const formattedList = audioClipMapper
+	const formattedList = audioClipMapperV2
 		.map(
 			(audioName, index) =>
 				`${index + 1}: ${audioName.replaceAll("_", " ")}`
@@ -97,7 +98,7 @@ export const audioListMessage = () => {
 	return formattedList
 }
 
-const DEFAULT_PATH = audioClipMapper[0]
+const DEFAULT_PATH = audioClipMapperV2[0]
 const mapAudioIdToPath = (clipId: number) => {
-	return audioClipMapper[clipId - 1] ?? DEFAULT_PATH
+	return audioClipMapperV2[clipId - 1] ?? DEFAULT_PATH
 }
