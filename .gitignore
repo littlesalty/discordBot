@@ -3,3 +3,4 @@
 secrets.env
 /dist
 /src/audio-player/audios
+/audios
