@@ -3,6 +3,7 @@ import {
 	createAudioPlayer,
 	createAudioResource,
 	joinVoiceChannel,
+	VoiceConnection,
 } from "@discordjs/voice"
 import { Message } from "discord.js"
 import { join } from "path"
@@ -55,8 +56,25 @@ const audioClipMapper = [
 ]
 const NUMBER_OF_AUDIO_FILES = audioClipMapper.length
 export const audioPlayer = createAudioPlayer()
+let latestConnection: VoiceConnection | null = null
+let audioPlayerAutoDisconnectListener: NodeJS.Timeout | null = null
 export let audioPlayerStatus: AudioPlayerStatus = AudioPlayerStatus.Idle
 export const playAudio = (message: Message<boolean>) => {
+	if (!latestConnection) {
+		audioPlayer.on("stateChange", (_oldState, newState) => {
+			audioPlayerStatus = newState.status
+			if (isPlayingStatus(audioPlayerStatus))
+				if (audioPlayerAutoDisconnectListener) {
+					audioPlayerAutoDisconnectListener.refresh()
+				} else {
+					audioPlayerAutoDisconnectListener = setTimeout(() => {
+						if (!isPlayingStatus(audioPlayerStatus)) {
+							latestConnection?.disconnect()
+						}
+					}, 300_000)
+				}
+		})
+	}
 	const channel = message.member?.voice?.channel
 	let audioToPlay = 1
 	try {
@@ -75,29 +93,20 @@ export const playAudio = (message: Message<boolean>) => {
 	}
 
 	if (channel.isVoiceBased()) {
-		const connection = joinVoiceChannel({
+		latestConnection = joinVoiceChannel({
 			channelId: channel.id,
 			guildId: channel.guild.id,
 			adapterCreator: channel.guild.voiceAdapterCreator,
 		})
 
 		// Subscribe the connection to the audio player (will play audio on the voice connection)
-		const subscription = connection.subscribe(audioPlayer)
+		const subscription = latestConnection.subscribe(audioPlayer)
 
 		// subscription could be undefined if the connection is destroyed!
 		if (subscription) {
 			const resourceDir = mapAudioIdToPath(audioToPlay)
 			const resource = createAudioResource(`audios/${resourceDir}.mp3`)
 			audioPlayer.play(resource)
-			audioPlayer.on("stateChange", (_oldState, newState) => {
-				audioPlayerStatus = newState.status
-				if (isPlayingStatus(audioPlayerStatus))
-					setTimeout(() => {
-						if (!isPlayingStatus(audioPlayerStatus)) {
-							connection.disconnect()
-						}
-					}, 300_000)
-			})
 		}
 	}
 }
