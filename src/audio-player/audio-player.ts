@@ -47,6 +47,7 @@ const audioClipMapper = [
 	"risa_de_josep",
 	"risa_de_josep_2",
 	"no_orgasmico_de_diego",
+	"orgasmo",
 	"algunos_dirian_que_he_troleado",
 	"ay_no_tienes_smite",
 	"hostia_sergi_como_que_sergi",
