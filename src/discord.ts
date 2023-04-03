@@ -19,7 +19,7 @@ import { getStartOfToday, setIntervalAndExecute } from "./utils/common"
 import { doIfCanReply } from "./utils/no-spam"
 interface IDiscordService {
 	discordClient: Client
-	twitchService: TwitchService
+	twitchService?: TwitchService
 	defaultChannelId?: string
 }
 
@@ -36,12 +36,12 @@ const intents = new IntentsBitField([
 ])
 export class DiscordService implements IDiscordService {
 	discordClient: Client
-	twitchService: TwitchService
+	twitchService?: TwitchService
 	guilds?: Array<Guild>
 	mainGuild: Guild
 	defaultChannelId?: string
 
-	constructor(twitchService: TwitchService, defaultChannelId?: string) {
+	constructor(twitchService?: TwitchService, defaultChannelId?: string) {
 		this.discordClient = new Client({
 			intents,
 		})
@@ -71,7 +71,7 @@ export class DiscordService implements IDiscordService {
 		this.discordClient.on("messageCreate", (message) => {
 			const content = message.content.toLowerCase()
 			if (content === "!refresh") {
-				this.twitchService.getTwitchClips()
+				this.twitchService?.getTwitchClips()
 			}
 			replyToMessage(message)
 		})
@@ -110,6 +110,10 @@ export class DiscordService implements IDiscordService {
 	 */
 	pollForTwitchClipsAndUpdateChannel() {
 		setIntervalAndExecute(async () => {
+			if (!this.twitchService) {
+				return
+			}
+
 			const clipsChannel = this.mainGuild?.channels.cache.find((c) => {
 				// the text channel must be named "clips"
 				return c.name === "clips"
